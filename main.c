@@ -1,6 +1,7 @@
 // Compiler headers
 #include <stdio.h>
 #include <math.h>
+#include <time.h>
 #include "string.h"
 
 // Pico SDK headers
@@ -10,7 +11,7 @@
 // Project specific headers
 #include "adc.h"
 #include "pwm.h"
-//#include "fft_imp.h"
+#include "fft_imp.h"
 
 
 
@@ -31,19 +32,22 @@ int main() {
     printf("adc_init() \n");
     
 
-    uint32_t adcData;
-    while (1)
+    int32_t adcData[256];
+    for (int i = 0; i < 256; i++)
     {
-       bool check = ADC_CheckData();
-        if (check == true) {
-        adcData = ADC_GetRaw(0);
-        printf("Value: %u\n", adcData, "\n");
-       }
-       else {
+        ADC_CheckData();
+        //if (check == true) {
+        adcData[i] = ADC_GetRaw(0);// + (rand() % 3);
+        printf("Value: %u\n", i, adcData[i], "\n");
+    //}
+       /*else {
         printf("DRDY false - no new data available \n");
-       }
-       sleep_ms(1000);
+       }*/
+       sleep_ms(250);
     }
+    //adcData = ADC_CollectData(N); //this function call is ready to be used, when DRDY begins working
+    fft(adcData);
+
 }
 
 // Some compiler versions throw errors like "_xxxxx() not defined". Provide dummy implementation here to silent them.

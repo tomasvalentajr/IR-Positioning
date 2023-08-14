@@ -34,6 +34,7 @@ bool ADC_WriteRegister(uint8_t reg, uint16_t val);
 bool ADC_CheckData(void);
 
 uint32_t ADC_GetRaw(size_t ch);
+uint32_t ADC_CollectData(int amount);
 /*double ADC_GetRatio(size_t ch);
 double ADC_GetResistance(size_t ch);
 double ADC_GetTemperature(size_t ch);*/
