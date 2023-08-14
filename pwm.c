@@ -8,25 +8,44 @@
 #define PIN_PWM_GP26 26
 // Output PWM signals on pins 26 and 28
 void LED_Init() {
-    gpio_set_function(26, GPIO_FUNC_PWM);
-    gpio_set_function(28, GPIO_FUNC_PWM);
+    //gpio_set_function(26, GPIO_FUNC_PWM);
+    //gpio_set_function(28, GPIO_FUNC_PWM);
+    
+    printf("LED_Init Started");
+    const uint LED1A_PIN = 34;
+    const uint LED2A_PIN = 31;
+    gpio_init(LED1A_PIN);
+    gpio_init(LED2A_PIN);
+    gpio_set_dir(LED1A_PIN, GPIO_OUT);
+    gpio_set_dir(LED2A_PIN, GPIO_OUT);
+    printf("LED_Pins initialised");
+    
 }
 
 void LED_ON() {
-    const uint LED1A_PIN = 31;
-    const uint LED2A_PIN = 34;
+    printf("LED_ON Function running \n");
+    const uint LED1A_PIN = 26;
+    const uint LED2A_PIN = 28;
+    const uint LED_PIN = PICO_DEFAULT_LED_PIN;
+    gpio_init(LED_PIN);
+    gpio_set_dir(LED_PIN, GPIO_OUT);
+    gpio_put(LED_PIN, 1);
+    printf("Def LED ON \n");
+
     gpio_init(LED1A_PIN);
     gpio_init(LED2A_PIN);
     gpio_set_dir(LED1A_PIN, GPIO_OUT);
     gpio_set_dir(LED2A_PIN, GPIO_OUT);
     
     gpio_put(LED1A_PIN, 1);
-    gpio_put(LED2A_PIN, 1);    
+    gpio_put(LED2A_PIN, 1);  
+    printf("All LEDs ON \n");
+    
 }
 
 void LED_OFF() {
-    const uint LED1_PIN = 31;
-    const uint LED2_PIN = 34;
+    const uint LED1_PIN = 26;
+    const uint LED2_PIN = 28;
     gpio_init(LED1_PIN);
     gpio_init(LED2_PIN);
     gpio_set_dir(LED1_PIN, GPIO_OUT);
