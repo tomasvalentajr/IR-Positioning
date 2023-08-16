@@ -3,6 +3,8 @@
 
 #include "math.h"
 
+#include <stdio.h>
+#include "pico/stdlib.h"
 #include "hardware/gpio.h"
 #include "hardware/clocks.h"
 #include "hardware/spi.h"
@@ -21,14 +23,14 @@
 #define PIN_CS 13
 #define PIN_DRDY 14
 #define PIN_RST 15
-#define PIN_CLKIN 27
+#define PIN_CLKIN 21
 
-uint8_t tx_data[24] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
-uint8_t rx_data[24] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+uint8_t tx_data[18] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+uint8_t rx_data[18] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 
 uint32_t adc_data[4];
 uint32_t ADC_CollData[N];
-int len = 24;
+int len = 18;
 
 //static const uint8_t REG_DEVID = 0x00;
 //static const uint8_t REG_STATUS = 0x01;
@@ -40,7 +42,7 @@ static const uint8_t REG_CH0_CFG = 0x09;
 
 uint16_t ADC_CONFIG_CLOCK = 
         0b0000 << 12  |   // 15:12     Reserved
-        0b1111 << 8  |   // 11:8    Enable all channels
+        0b0001 << 8  |   // 11:8    Enable all channels
         0b0   << 7  |   // 7        Reserved
         0b0   << 6  |   // 6        Reserved
         0b0   << 5  |   // 5        No TurboMode
@@ -57,8 +59,8 @@ uint16_t ADC_CONFIG_MODE =
         0b000 << 5  |   // 7:5      Reserved
         0b0   << 4  |   // 4        SPI Timeout enable
         0b01  << 2  |   // 3:2      DRDY pin signal source selection - 01b = the first one
-        0b0   << 1  |   // 1        DRDY pin state when conversion data is not available
-        0b0;            // 0        DRDY signal format when conversion data is available
+        0b0   << 1  |   // 1        DRDY pin state when conversion data is not available - high
+        0b0;            // 0        DRDY signal format when conversion data is available - low when data available till all data shifted
 
 uint16_t ADC_CONFIG_THRSHLD_LSB = 
         0b00000000  << 8 |   // 15:8    Reserved
@@ -120,9 +122,10 @@ bool ADC_ConvertResults(void)
 
 void ADC_Init(void)
 {
-    spi_init(spi1, 11520); 
+    spi_init(spi1, 5120); 
     // Start external clock for ADC
     clock_gpio_init(PIN_CLKIN, CLOCKS_CLK_SYS_CTRL_AUXSRC_VALUE_CLKSRC_PLL_SYS, 15);       // 120 MHz sys clock / 15 = 8 MHz, in recommended range, datasheet pg. 7
+    gpio_set_function(PIN_CLKIN, GPIO_FUNC_GPCK);
 
     gpio_set_function(PIN_SCLK, GPIO_FUNC_SPI);
     gpio_set_function(PIN_DIN, GPIO_FUNC_SPI);
@@ -132,29 +135,42 @@ void ADC_Init(void)
     gpio_init(PIN_CS);
     gpio_init(PIN_DRDY);
     gpio_init(PIN_RST);
-    gpio_init(PIN_CLKIN);
+    //gpio_init(PIN_CLKIN);
 
     // Set the pins as outputs, except for DRDY (input)
     gpio_set_dir(PIN_CS, GPIO_OUT);
     gpio_set_dir(PIN_DRDY, GPIO_IN);
     gpio_set_dir(PIN_RST, GPIO_OUT);
-    gpio_set_dir(PIN_CLKIN, GPIO_OUT);
+    //gpio_set_dir(PIN_CLKIN, GPIO_OUT);
+    gpio_pull_up(PIN_DRDY);
 
     gpio_put(PIN_CS, 1);
     sleep_ms(10);
     ADC_WriteRegister(REG_MODE, ADC_CONFIG_MODE);
     ADC_WriteRegister(REG_CLOCK, ADC_CONFIG_CLOCK);
-    //ADC_WriteRegister(REG_THRSHLD_LSB, ADC_CONFIG_THRSHLD_LSB); //disable DC-Block Filter
+    ADC_WriteRegister(REG_THRSHLD_LSB, ADC_CONFIG_THRSHLD_LSB); //disable DC-Block Filter
     ADC_WriteRegister(REG_CH0_CFG, ADC_CONFIG_CH0_CFG); //set channel 0 input selection to positive DC test signal
     sleep_ms(1);
     printf("Registers Set \n");
     // Resync by pulsing shorter than t_W(RSL) (2048 * t_clkin) but longer than one clkin (125 ns @ 8 MHz) -> 10 us should be ok
-    uint32_t status = ADC_ReadRegister(REG_STATUS);
-    printf("%u \n", status);
-    gpio_put(PIN_CS, 0);
-    sleep_us(10);
-    gpio_put(PIN_CS, 1);
+    uint16_t status = ADC_ReadRegister(REG_STATUS);
+    printf("%x \n", status); //answer: 32658d = 1000000000010010b
+    // Resync by pulsing shorter than t_W(RSL) (2048 * t_clkin) but longer than one clkin (125 ns @ 8 MHz) -> 10 us should be ok
+    gpio_put(PIN_RST, 0);
+    sleep_us(200);
+    gpio_put(PIN_RST, 1);
+    printf("Resync Done \n");
+    // Resync by pulsing shorter than t_W(RSL) (2048 * t_clkin) but longer than one clkin (125 ns @ 8 MHz) -> 10 us should be ok
+    gpio_put(PIN_RST, 0);
+    sleep_us(300);
+    gpio_put(PIN_RST, 1);
     printf("Reset Done \n");
+    uint16_t status2 = ADC_ReadRegister(REG_STATUS);
+    printf("%x \n", status2); //answer: 640d = 0000 0010 1000 0000
+    
+    gpio_put(PIN_CS, 0);
+    ADC_SetCommand(COMMAND_UNLOCK);
+    ADC_ExchangeData(len);
 }
 
 uint16_t ADC_ReadRegister(uint8_t reg)
@@ -203,28 +219,32 @@ uint32_t ADC_GetRaw(size_t ch)
     return adc_data[ch];
 }
 
-uint32_t ADC_CollectData(int amount)
+void ADC_CollectData(int32_t* arr, int amount)
 {   
+    printf("ADC_CollectData started \n");
     for (int i = 0; i < amount; i++)
     {
+        printf("Waiting for value number: %d \n", i);
         int32_t x = 0;
-        while (gpio_get(PIN_DRDY) == true || x < 625000000)
+        while (gpio_get(PIN_DRDY) == true && x < 20000)
         {
             //wait for new data
             //printf("DRDY true - no new data \n");
+            printf("%d \n", x);
             x++ ;
         }
-        if (gpio_get(PIN_DRDY) == true) { 
+        if (gpio_get(PIN_DRDY) == false) { 
             ADC_SetCommand(COMMAND_NULL);
             ADC_ExchangeData(len);
             ADC_ConvertResults();
-            ADC_CollData[i] = ADC_GetRaw(0);
+            arr[i] = ADC_GetRaw(0);
         } else { //if the while loop ended due to x reaching 625000000, print an error message.
             printf("Timeout - no new data in the last 5 seconds. \n");
             i = amount;
         }
     }
-    return ADC_CollData[amount];
+    printf("All values collected \n");
+    //return ADC_CollData;
     
 }
 

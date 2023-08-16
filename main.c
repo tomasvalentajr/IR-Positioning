@@ -31,21 +31,25 @@ int main() {
     ADC_Init();
     printf("adc_init() \n");
     
+    //while(1);
 
-    int32_t adcData[256];
-    for (int i = 0; i < 256; i++)
+    int32_t adcData[N] = {0};
+    for (int i = 0; i < N; i++) {
+        printf("ADC-Data: %d\n", adcData[i]);
+    }
+    /*for (int i = 0; i < N; i++)
     {
         ADC_CheckData();
         //if (check == true) {
         adcData[i] = ADC_GetRaw(0);// + (rand() % 3);
-        printf("Value: %u\n", i, adcData[i], "\n");
+        printf("Value: %u %d\n", i, adcData[i]);
     //}
-       /*else {
+       else {
         printf("DRDY false - no new data available \n");
-       }*/
+       }
        sleep_ms(250);
-    }
-    //adcData = ADC_CollectData(N); //this function call is ready to be used, when DRDY begins working
+    }*/
+    ADC_CollectData(adcData, N); //this function call is ready to be used, when DRDY begins working
     fft(adcData);
 
 }

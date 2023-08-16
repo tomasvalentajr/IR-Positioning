@@ -7,10 +7,10 @@
 
 
 
-int fft(int32_t datapoints[N]) {
+int fft(int32_t* datapoints) {
     // Create an array for your 24-bit data points and Populate the data array with your 24-bit numbers (sample values)
     printf("fft() started \n");
-    int32_t data[N];
+    int32_t data[N] = {0};
     for (int i = 0; i < N; i++) {
         data[i] = datapoints[i];
     }
@@ -31,7 +31,7 @@ int fft(int32_t datapoints[N]) {
     // Perform the FFT
     kiss_fft_cpx fft_out[N];
     kiss_fft(cfg, fft_in, fft_out);
-    printf("FFT preformed \n");
+    printf("FFT performed \n");
     // Clean up
     kiss_fft_free(cfg);
     printf("free(cfg) \n");
@@ -41,8 +41,14 @@ int fft(int32_t datapoints[N]) {
         printf("Frequency bin %d: %f\n", i, magnitude);
     }
     printf("Results printed \n");
+    //8388608 values for 23-Bits - 2^23 
+    float conData[N] = {0};
+    float voltRef = 1.1;
     for (int i = 0; i < N; i++) {
-        printf("ADC-Data: %d\n", data[i]);
+        conData[i] = data[i] * voltRef / 8388608;
+    }
+    for (int i = 0; i < N; i++) {
+        printf("ADC-Data: %x\n", data[i]);
     }
     return 0;
 }

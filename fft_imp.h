@@ -9,6 +9,6 @@
 #define N 256 // Number of data points
 
 // Function to calculate FFT results
-int fft(int32_t datapoints[N]);
+int fft(int32_t* datapoints);
 
 #endif // FFT_IMP_H
