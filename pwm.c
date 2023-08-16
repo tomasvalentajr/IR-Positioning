@@ -11,14 +11,14 @@ void LED_Init() {
     //gpio_set_function(26, GPIO_FUNC_PWM);
     //gpio_set_function(28, GPIO_FUNC_PWM);
     
-    printf("LED_Init Started");
+    printf("LED_Init Started \n");
     const uint LED1A_PIN = 34;
     const uint LED2A_PIN = 31;
     gpio_init(LED1A_PIN);
     gpio_init(LED2A_PIN);
     gpio_set_dir(LED1A_PIN, GPIO_OUT);
     gpio_set_dir(LED2A_PIN, GPIO_OUT);
-    printf("LED_Pins initialised");
+    printf("LED_Pins initialised \n");
     
 }
 
