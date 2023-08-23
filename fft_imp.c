@@ -7,38 +7,44 @@
 
 
 
-int fft(int32_t* datapoints) {
+int fft(int32_t* datapoints, float* frequencySpectrum) {
     // Create an array for your 24-bit data points and Populate the data array with your 24-bit numbers (sample values)
     printf("fft() started \n");
     int32_t data[N] = {0};
     for (int i = 0; i < N; i++) {
         data[i] = datapoints[i];
     }
-    printf("datapoints loaded \n");
+    //printf("datapoints loaded \n");
 
     
     // Convert the 24-bit data to 32-bit for kissfft
-    kiss_fft_cpx fft_in[N];
+    kiss_fft_cpx fft_in[N] = {0};
     for (int i = 0; i < N; i++) {
         fft_in[i].r = (kiss_fft_scalar)data[i];
         fft_in[i].i = 0.0;
     }
-    printf("datapoints converted to real and imaginary scalars \n");
+    //printf("datapoints converted to real and imaginary scalars \n");
 
     // Create kissfft configuration - N Samples, non-inverted FFT
     kiss_fft_cfg cfg = kiss_fft_alloc(N, 0, NULL, NULL);
-    printf("kissfft configured \n");
+    //printf("kissfft configured \n");
     // Perform the FFT
-    kiss_fft_cpx fft_out[N];
+    kiss_fft_cpx fft_out[N] = {0};
     kiss_fft(cfg, fft_in, fft_out);
-    printf("FFT performed \n");
+    //printf("FFT performed \n");
     // Clean up
     kiss_fft_free(cfg);
-    printf("free(cfg) \n");
-     // Print the FFT results (magnitude)
+    // printf("free(cfg) \n");
+    
+    //Save the magnitudes into an array
+    for (int i = 0; i < N; i++) {
+        frequencySpectrum[i] = sqrt(fft_out[i].r * fft_out[i].r + fft_out[i].i * fft_out[i].i);
+    }
+
+    // Print the FFT results (magnitude)
     for (int i = 0; i < N; i++) {
         float magnitude = sqrt(fft_out[i].r * fft_out[i].r + fft_out[i].i * fft_out[i].i);
-        printf("Frequency bin %d: %f\n", i, magnitude);
+        printf("%f\n", magnitude);
     }
     printf("Results printed \n");
     //8388608 values for 23-Bits - 2^23 
@@ -48,7 +54,7 @@ int fft(int32_t* datapoints) {
         conData[i] = data[i] * voltRef / 8388608;
     }
     for (int i = 0; i < N; i++) {
-        printf("ADC-Data: %x\n", data[i]);
+        printf("%d\n", data[i]);
     }
     return 0;
 }

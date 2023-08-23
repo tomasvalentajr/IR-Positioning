@@ -6,9 +6,9 @@
 #include <math.h>
 #include "kiss_fft/kiss_fft.h"
 
-#define N 256 // Number of data points
+#define N 1024 // Number of data points
 
 // Function to calculate FFT results
-int fft(int32_t* datapoints);
+int fft(int32_t* datapoints, float* frequencySpectrum);
 
 #endif // FFT_IMP_H

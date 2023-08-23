@@ -13,47 +13,56 @@
 #include "pwm.h"
 #include "fft_imp.h"
 
+void getPosition(float* freq) {
+    //calculate the relative position of the IR-sources from the relative amplitudes of their frequencies
+    int binNum1 = 513; //Frequency bin of the first source
+    int binNum2 = 353; //Frequency bin of the second source - subject to change
+    float amp1 = 0;
+    float amp2 = 0;
+    float relDistDiff = 0;
+
+    amp1 = freq[binNum1];
+    amp2 = freq[binNum2];
+    if(amp2 <= amp1){
+        relDistDiff = sqrt(amp2/amp1);  
+        //printf("Das verhältnis zwischen Abständen l1 und l2 beträgt: %f \n", relDistDiff);
+        printf("l1 =%f \n", relDistDiff, "*l2");
+    }else {
+        relDistDiff = sqrt(amp1/amp2);
+        //printf("Das verhältnis zwischen Abständen l2 und l1 beträgt: %f \n", relDistDiff);
+        printf("l1 =%f \n", 1/relDistDiff, "*l2");
+    }   
+}
+
 
 
 int main() {
     
     stdio_init_all();
     sleep_ms(1000);
-    printf("stdio_init() \n");
-    
-    LED_Init();
-    //FFT_Init();
+        
     
     //For testing, turn both LEDs on, no blinking
-    LED_ON();
-    printf("LED_ON \n");
-    //pwm();
+    //LED_ON();
+    
+    //Turn on the IR-Sources with their characteristic frequencies
+    pwm();
+    //printf("pwm() \n");
+
+    sleep_ms(1000);
     ADC_Init();
     printf("adc_init() \n");
     
-    //while(1);
 
-    int32_t adcData[N] = {0};
-    for (int i = 0; i < N; i++) {
-        printf("ADC-Data: %d\n", adcData[i]);
-    }
-    /*for (int i = 0; i < N; i++)
-    {
-        ADC_CheckData();
-        //if (check == true) {
-        adcData[i] = ADC_GetRaw(0);// + (rand() % 3);
-        printf("Value: %u %d\n", i, adcData[i]);
+    int32_t adcData[N] = {0};   //Array for storing raw ADC Data
+    float freqBins[N] = {0};    //Array for storing the amplitudes of the frequency spectrum
+    //while (1)
+    //{
+        //ADC_MonitorData();
+        ADC_CollectData(adcData, N); //this function call is ready to be used, when DRDY begins working
+        fft(adcData, freqBins);
+        //getPosition(freqBins);
     //}
-       else {
-        printf("DRDY false - no new data available \n");
-       }
-       sleep_ms(250);
-    }*/
-    ADC_CollectData(adcData, N); //this function call is ready to be used, when DRDY begins working
-    fft(adcData);
-
+    //ADC_CollectData(adcData, N); //this function call is ready to be used, when DRDY begins working
+    //fft(adcData);
 }
-
-// Some compiler versions throw errors like "_xxxxx() not defined". Provide dummy implementation here to silent them.
-//void _close() {}
-//void _lseek() {}

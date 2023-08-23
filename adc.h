@@ -21,11 +21,6 @@
 #define RESP_UNLOCK                 0b0000011001010101
 
 
-/*#define B           -0.0000005775
-#define p           0.0039083 / -0.0000005775       // p = A / B
-#define R_0         1000.0*/
-
-
 void ADC_Init(void);
 
 uint16_t ADC_ReadRegister(uint8_t reg);
@@ -35,8 +30,7 @@ bool ADC_CheckData(void);
 
 uint32_t ADC_GetRaw(size_t ch);
 void ADC_CollectData(int32_t* arr, int amount);
-/*double ADC_GetRatio(size_t ch);
-double ADC_GetResistance(size_t ch);
-double ADC_GetTemperature(size_t ch);*/
+void ADC_MonitorData(void);
+
 
 #endif /* ADC_H */

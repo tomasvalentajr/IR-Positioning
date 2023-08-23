@@ -10,8 +10,6 @@
 #include "hardware/spi.h"
 
 
-
-
 // ADC word length = 24 bit
 
 #define int24(addr)             (*addr << 16 | *(addr + 1) << 8 | *(addr + 2))
@@ -32,17 +30,15 @@ uint32_t adc_data[4];
 uint32_t ADC_CollData[N];
 int len = 18;
 
-//static const uint8_t REG_DEVID = 0x00;
-//static const uint8_t REG_STATUS = 0x01;
 static const uint8_t REG_MODE = 0x02;
 static const uint8_t REG_CLOCK = 0x03;
-static const uint8_t REG_STATUS = 0x01;
+//static const uint8_t REG_STATUS = 0x01;
 static const uint8_t REG_THRSHLD_LSB = 0x08;
 static const uint8_t REG_CH0_CFG = 0x09;
 
 uint16_t ADC_CONFIG_CLOCK = 
         0b0000 << 12  |   // 15:12     Reserved
-        0b0001 << 8  |   // 11:8    Enable all channels
+        0b0001 << 8  |   // 11:8    Enable channel zero
         0b0   << 7  |   // 7        Reserved
         0b0   << 6  |   // 6        Reserved
         0b0   << 5  |   // 5        No TurboMode
@@ -75,10 +71,8 @@ uint16_t ADC_CONFIG_CH0_CFG =
 
 static void ADC_SetCommand(uint16_t command)
 {
-    printf("ADC_SetCommand started \n");
     tx_data[0] = command >> 8 & 0xff;
     tx_data[1] = command & 0xff;
-    printf("Command set \n");
 }
 
 static void ADC_SetRegisterValue(uint16_t value)
@@ -94,37 +88,31 @@ static uint16_t ADC_GetResponse(void)
 
 static void ADC_ExchangeData(int len)
 {
-    printf("ADC_ExchangeData started \n");
     gpio_put(PIN_CS, 0);       // 8,33 ns per instruction vs. 16 ns min delay
     sleep_us(1);
-    printf("PIN_CS set 0 \n");
     spi_write_read_blocking(spi1, tx_data, rx_data, len);
-    printf("Data exchanged \n");
     sleep_us(1);
     gpio_put(PIN_CS, 1);
-    printf("PIN_CS set 1 \n");
 }
 
 bool ADC_ConvertResults(void)
 {
-    printf("ADC_ConvertResults started \n");
     uint8_t* offset = rx_data + 3;
     for (int ch = 0; ch < 4; ch++)
     {
         adc_data[ch] = int24(offset);
         offset +=3;
-        printf("Channel %d", ch, "included \n");
     }
-    printf("All Channels included \n");
     return true;
 }
 
 
 void ADC_Init(void)
 {
-    spi_init(spi1, 5120); 
+    spi_init(spi1, 1250000); 
+
     // Start external clock for ADC
-    clock_gpio_init(PIN_CLKIN, CLOCKS_CLK_SYS_CTRL_AUXSRC_VALUE_CLKSRC_PLL_SYS, 15);       // 120 MHz sys clock / 15 = 8 MHz, in recommended range, datasheet pg. 7
+    clock_gpio_init(PIN_CLKIN, CLOCKS_CLK_SYS_CTRL_AUXSRC_VALUE_CLKSRC_PLL_SYS, 100);       // 125 MHz sys clock / 100 = 1.25 MHz
     gpio_set_function(PIN_CLKIN, GPIO_FUNC_GPCK);
 
     gpio_set_function(PIN_SCLK, GPIO_FUNC_SPI);
@@ -135,50 +123,41 @@ void ADC_Init(void)
     gpio_init(PIN_CS);
     gpio_init(PIN_DRDY);
     gpio_init(PIN_RST);
-    //gpio_init(PIN_CLKIN);
 
     // Set the pins as outputs, except for DRDY (input)
     gpio_set_dir(PIN_CS, GPIO_OUT);
     gpio_set_dir(PIN_DRDY, GPIO_IN);
     gpio_set_dir(PIN_RST, GPIO_OUT);
-    //gpio_set_dir(PIN_CLKIN, GPIO_OUT);
     gpio_pull_up(PIN_DRDY);
 
     gpio_put(PIN_CS, 1);
     sleep_ms(10);
-    ADC_WriteRegister(REG_MODE, ADC_CONFIG_MODE);
-    ADC_WriteRegister(REG_CLOCK, ADC_CONFIG_CLOCK);
+    ADC_WriteRegister(REG_MODE, ADC_CONFIG_MODE); //Configure ADC
+    ADC_WriteRegister(REG_CLOCK, ADC_CONFIG_CLOCK); //Configure ADC
     ADC_WriteRegister(REG_THRSHLD_LSB, ADC_CONFIG_THRSHLD_LSB); //disable DC-Block Filter
     ADC_WriteRegister(REG_CH0_CFG, ADC_CONFIG_CH0_CFG); //set channel 0 input selection to positive DC test signal
     sleep_ms(1);
-    printf("Registers Set \n");
-    // Resync by pulsing shorter than t_W(RSL) (2048 * t_clkin) but longer than one clkin (125 ns @ 8 MHz) -> 10 us should be ok
-    uint16_t status = ADC_ReadRegister(REG_STATUS);
-    printf("%x \n", status); //answer: 32658d = 1000000000010010b
-    // Resync by pulsing shorter than t_W(RSL) (2048 * t_clkin) but longer than one clkin (125 ns @ 8 MHz) -> 10 us should be ok
+    
+    //Resync by pulsing shorter than t_W(RSL) (2048 * t_clkin = 82 ms) but longer than one clkin (40 us @ 25 kHz) -> 200 us should be ok
     gpio_put(PIN_RST, 0);
     sleep_us(200);
     gpio_put(PIN_RST, 1);
-    printf("Resync Done \n");
-    // Resync by pulsing shorter than t_W(RSL) (2048 * t_clkin) but longer than one clkin (125 ns @ 8 MHz) -> 10 us should be ok
+    //printf("Resync Done \n");
+    //Reset by pulsing longer than t_W(RSL) (2048 * t_clkin = 82 ms) -> 150 ms should be ok
     gpio_put(PIN_RST, 0);
-    sleep_us(300);
+    sleep_ms(150);
     gpio_put(PIN_RST, 1);
-    printf("Reset Done \n");
-    uint16_t status2 = ADC_ReadRegister(REG_STATUS);
-    printf("%x \n", status2); //answer: 640d = 0000 0010 1000 0000
+    //printf("Reset Done \n");
     
-    gpio_put(PIN_CS, 0);
-    ADC_SetCommand(COMMAND_UNLOCK);
-    ADC_ExchangeData(len);
+    //gpio_put(PIN_CS, 0);
+    //ADC_SetCommand(COMMAND_UNLOCK);
+    //ADC_ExchangeData(len);
 }
 
 uint16_t ADC_ReadRegister(uint8_t reg)
 {
     ADC_SetCommand(COMMAND_READ(reg, 1));
-
     ADC_ExchangeData(len);
-
     ADC_SetCommand(COMMAND_NULL);
     ADC_ExchangeData(len);    
 
@@ -197,17 +176,15 @@ bool ADC_WriteRegister(uint8_t reg, uint16_t val)
 
 
 bool ADC_CheckData(void)
-{   printf("CheckData stated \n");
+{   
     if (gpio_get(PIN_DRDY) == true) {
-        printf("DRDY true - no data \n");
         return false;
     }
     else {
-    printf("DRDY false - get data \n");
     ADC_SetCommand(COMMAND_NULL);
     ADC_ExchangeData(len);
     ADC_ConvertResults();
-    printf("Results converted \n");
+    
     return true;
     }
 }
@@ -215,7 +192,6 @@ bool ADC_CheckData(void)
 
 uint32_t ADC_GetRaw(size_t ch)
 {
-    printf("ADC_GetRaw started \n");
     return adc_data[ch];
 }
 
@@ -224,14 +200,12 @@ void ADC_CollectData(int32_t* arr, int amount)
     printf("ADC_CollectData started \n");
     for (int i = 0; i < amount; i++)
     {
-        printf("Waiting for value number: %d \n", i);
-        int32_t x = 0;
-        while (gpio_get(PIN_DRDY) == true && x < 20000)
+        while (gpio_get(PIN_DRDY) == true) //&& x < 40000000
         {
             //wait for new data
             //printf("DRDY true - no new data \n");
-            printf("%d \n", x);
-            x++ ;
+            //printf("%d \n", x);
+            //x++ ;
         }
         if (gpio_get(PIN_DRDY) == false) { 
             ADC_SetCommand(COMMAND_NULL);
@@ -243,27 +217,13 @@ void ADC_CollectData(int32_t* arr, int amount)
             i = amount;
         }
     }
-    printf("All values collected \n");
-    //return ADC_CollData;
-    
 }
 
-/*double ADC_GetRatio(size_t ch)
+void ADC_MonitorData()
 {
-    return adc_data[ch] / 8388608.0;
-}*/
-
-/*double ADC_GetResistance(size_t ch)
-{
-    double ratio = ADC_GetRatio(ch);
-    return 5600.0 * ratio / (4.3 / 1.6 / 0.96 - ratio);
-}*/
-
-/*double ADC_GetTemperature(size_t ch)
-{
-    double q = 1 / B - ADC_GetResistance(ch) / (R_0 * B);
-
-    // pq formula
-    double temp = p / -2.0 - sqrt(p * p / 4.0 - q);
-    return temp;
-}*/
+    uint32_t data = 0;
+    ADC_CheckData();
+    data = ADC_GetRaw(0);
+    printf("%d \n", data);
+    sleep_ms(100);
+}

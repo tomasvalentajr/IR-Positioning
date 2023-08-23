@@ -34,15 +34,6 @@ target_link_libraries(IR-Positioning
 )
 
 
-# Enable a summary of used memory at the end of linking process
-# Some compiler versions do not understand --no-warm-rwx-segments
-#target_link_options(IR-Positioning PUBLIC "-Wl,--print-memory-usage,--no-warn-rwx-segments")
-#add_custom_command(TARGET IR-Positioning
-#    POST_BUILD
-#    COMMENT "Code size:"
-#    COMMAND arm-none-eabi-size IR-Positioning.elf
-#    VERBATIM
-#)
 # printf only via USB
 pico_enable_stdio_uart(IR-Positioning 1)
 pico_enable_stdio_usb(IR-Positioning 1)
