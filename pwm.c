@@ -35,8 +35,8 @@ void pwm()
     uint32_t clock_freq = 125000000;
 
     uint16_t prescaler = 12500;
-    float pwm_freq_A = 363.0; //526 Hz = Bin 142
-    float pwm_freq_B = 250.0; //345 Hz = Bin 445
+    float pwm_freq_A = 526.0; //526 Hz = Bin 142
+    float pwm_freq_B = 345.0; //345 Hz = Bin 445
 
     float clock_div_A = clock_freq / prescaler / pwm_freq_A;
     //uint32_t pwm_wrap_A = clock_div_A / 2;

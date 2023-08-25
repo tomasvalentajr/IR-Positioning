@@ -16,11 +16,13 @@ add_executable(IR-Positioning
         adc.c
         fft_imp.c
         kiss_fft/kiss_fft.c
+        
 )
 
 target_include_directories(IR-Positioning PRIVATE
         .
         kiss_fft
+        
 )
 
 # pull in common dependencies and additional pwm hardware support

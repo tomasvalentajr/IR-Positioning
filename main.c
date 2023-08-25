@@ -4,6 +4,7 @@
 #include <time.h>
 #include "string.h"
 
+
 // Pico SDK headers
 #include "pico/stdlib.h"
 #include "hardware/timer.h"
@@ -20,6 +21,8 @@ void getPosition(float* freq) {
     float amp1 = 0;
     float amp2 = 0;
     float relDistDiff = 0;
+    float coef1 = 1;    //coefficients for calibration of the IR-Sources
+    float coef2 = 1;
 
     amp1 = freq[binNum1];
     amp2 = freq[binNum2];
@@ -39,30 +42,35 @@ void getPosition(float* freq) {
 int main() {
     
     stdio_init_all();
-    sleep_ms(1000);
+    //sleep_ms(1000);
         
     
     //For testing, turn both LEDs on, no blinking
-    //LED_ON();
+    LED_ON();
     
     //Turn on the IR-Sources with their characteristic frequencies
     pwm();
-    //printf("pwm() \n");
+    sleep_ms(2000);
 
-    sleep_ms(1000);
+    //sleep_ms(1000);
     ADC_Init();
     printf("adc_init() \n");
+    
     
 
     int32_t adcData[N] = {0};   //Array for storing raw ADC Data
     float freqBins[N] = {0};    //Array for storing the amplitudes of the frequency spectrum
-    //while (1)
-    //{
+    while (1)
+    {
         //ADC_MonitorData();
         ADC_CollectData(adcData, N); //this function call is ready to be used, when DRDY begins working
         fft(adcData, freqBins);
+        sleep_ms(1000);
         //getPosition(freqBins);
-    //}
-    //ADC_CollectData(adcData, N); //this function call is ready to be used, when DRDY begins working
-    //fft(adcData);
+    }
+    
+    
+    //printf("pwm() \n");
+    ADC_CollectData(adcData, N); //this function call is ready to be used, when DRDY begins working
+    fft(adcData, freqBins);
 }
