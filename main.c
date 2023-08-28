@@ -63,9 +63,12 @@ int main() {
     while (1)
     {
         //ADC_MonitorData();
+        for(int q = 0; q < 20; q++) {
         ADC_CollectData(adcData, N); //this function call is ready to be used, when DRDY begins working
         fft(adcData, freqBins);
-        sleep_ms(1000);
+        //sleep_ms(100);
+        }
+        printf("results printed \n");
         //getPosition(freqBins);
     }
     
@@ -73,4 +76,14 @@ int main() {
     //printf("pwm() \n");
     ADC_CollectData(adcData, N); //this function call is ready to be used, when DRDY begins working
     fft(adcData, freqBins);
+}
+
+void printTwentyPoints() {
+    int32_t adcData20[N] = {0};   //Array for storing raw ADC Data
+    float freqBins20[N] = {0};    //Array for storing the amplitudes of the frequency spectrum
+    for(uint16_t q = 0; q < 20; q++) {
+        ADC_CollectData(adcData20, N); //this function call is ready to be used, when DRDY begins working
+        fft(adcData20, freqBins20);
+        sleep_ms(200);
+    }
 }

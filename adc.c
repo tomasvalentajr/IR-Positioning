@@ -112,7 +112,7 @@ void ADC_Init(void)
     spi_init(spi1, 5208333); 
 
     // Start external clock for ADC
-    clock_gpio_init(PIN_CLKIN, CLOCKS_CLK_SYS_CTRL_AUXSRC_VALUE_CLKSRC_PLL_SYS, 24);       // 125 MHz sys clock / 100 = 1.25 MHz
+    clock_gpio_init(PIN_CLKIN, CLOCKS_CLK_SYS_CTRL_AUXSRC_VALUE_CLKSRC_PLL_SYS, 24);       // 125 MHz sys clock / 24 = 5,2 MHz
     gpio_set_function(PIN_CLKIN, GPIO_FUNC_GPCK);
 
     gpio_set_function(PIN_SCLK, GPIO_FUNC_SPI);
@@ -229,7 +229,7 @@ void ADC_MonitorData()
 }
 
 /*float calSources ()
-{   /*A function for calibrating the power of the sources. 
+{   //A function for calibrating the power of the sources. 
         - First measure the response with both sources in the same distance at the furthest point
         - Then measure the response of both sources in the same distance at the closest point
         - create a coefficient that adjusts the responses so, that they are the same

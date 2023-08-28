@@ -41,18 +41,24 @@ int fft(int32_t* datapoints, float* frequencySpectrum) {
         frequencySpectrum[i] = sqrt(fft_out[i].r * fft_out[i].r + fft_out[i].i * fft_out[i].i);
     }
 
-    // Print the FFT results (magnitude)
+    // Print the FFT results (magnitude) of the 140th and 212th frequency bin
+    /*float mag = sqrt(fft_out[139].r * fft_out[139].r + fft_out[139].i * fft_out[139].i);
+    printf("%f", mag);
+    printf(" | ");
+    mag = sqrt(fft_out[212].r * fft_out[212].r + fft_out[212].i * fft_out[212].i);
+    printf("%f\n", mag);*/
+
     for (int i = 0; i < N; i++) {
-        float magnitude = sqrt(fft_out[i].r * fft_out[i].r + fft_out[i].i * fft_out[i].i);
-        /*if (i == 139)
+        float magnitude[i] = sqrt(fft_out[i].r * fft_out[i].r + fft_out[i].i * fft_out[i].i);
+        if (i == 139)
         {
-            printf("%f", magnitude);
+            printf("%f", magnitude[i]);
             printf(" | ");
         } else if (i == 212)
         {
-            printf("%f\n", magnitude);
-        }*/
-        printf("%f\n", magnitude);
+            printf("%f\n", magnitude[i]);
+        }
+        //printf("%f\n", magnitude);
     }
     //printf("Results printed \n");
     //8388608 values for 23-Bits - 2^23 
