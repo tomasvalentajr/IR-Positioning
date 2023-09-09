@@ -200,22 +200,32 @@ void ADC_CollectData(int32_t* arr, int amount)
     //printf("ADC_CollectData started \n");
     for (int i = 0; i < amount; i++)
     {
-        while (gpio_get(PIN_DRDY) == true) //&& x < 40000000
+        
+        while (gpio_get(PIN_DRDY) == true) //&& x < 40000000 
         {
             //wait for new data
-            //printf("DRDY true - no new data \n");
-            //printf("%d \n", x);
             //x++ ;
         }
-        if (gpio_get(PIN_DRDY) == false) { 
-            ADC_SetCommand(COMMAND_NULL);
-            ADC_ExchangeData(len);
-            ADC_ConvertResults();
-            arr[i] = ADC_GetRaw(0);
-        } else { //if the while loop ended due to x reaching 625000000, print an error message.
-            printf("Timeout - no new data in the last 5 seconds. \n");
-            i = amount;
-        }
+       
+        ADC_SetCommand(COMMAND_NULL);
+        ADC_ExchangeData(len);
+        ADC_ConvertResults();
+        int32_t point = ADC_GetRaw(0);
+        if(i < 3){
+            arr[i] = point;
+        }else {
+            int32_t tenAva = 0;
+            for(int x = i - 3; x < i; x++){
+                tenAva = tenAva + arr[x];
+            }
+            tenAva = tenAva / 3;
+            if(point < 3 * tenAva && point > 0.25 * tenAva){
+            arr[i] = point;
+            } else {
+                i--;
+            }
+        }   
+       
     }
 }
 
@@ -227,16 +237,3 @@ void ADC_MonitorData()
     printf("%d \n", data);
     sleep_ms(500);
 }
-
-/*float calSources ()
-{   //A function for calibrating the power of the sources. 
-        - First measure the response with both sources in the same distance at the furthest point
-        - Then measure the response of both sources in the same distance at the closest point
-        - create a coefficient that adjusts the responses so, that they are the same
-    
-   int32_t calArr[1024] = {0};
-   float calFreq[1024] = {0}
-
-   ADC_CollectData(calArr, 1024);
-
-}*/

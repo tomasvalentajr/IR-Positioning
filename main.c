@@ -16,74 +16,44 @@
 
 void getPosition(float* freq) {
     //calculate the relative position of the IR-sources from the relative amplitudes of their frequencies
-    int binNum1 = 513; //Frequency bin of the first source
-    int binNum2 = 353; //Frequency bin of the second source - subject to change
+    int binNum1 = 139; //Frequency bin of the first source
+    int binNum2 = 212; //Frequency bin of the second source
     float amp1 = 0;
     float amp2 = 0;
-    float relDistDiff = 0;
-    float coef1 = 1;    //coefficients for calibration of the IR-Sources
-    float coef2 = 1;
+    float distRatio = 0;
 
     amp1 = freq[binNum1];
     amp2 = freq[binNum2];
-    if(amp2 <= amp1){
-        relDistDiff = sqrt(amp2/amp1);  
-        //printf("Das verhältnis zwischen Abständen l1 und l2 beträgt: %f \n", relDistDiff);
-        printf("l1 =%f \n", relDistDiff, "*l2");
-    }else {
-        relDistDiff = sqrt(amp1/amp2);
-        //printf("Das verhältnis zwischen Abständen l2 und l1 beträgt: %f \n", relDistDiff);
-        printf("l1 =%f \n", 1/relDistDiff, "*l2");
-    }   
+    distRatio = sqrt(amp2 / amp1);
+
+    printf("l1/l2 =%f\n", distRatio);
 }
 
 
-
 int main() {
-    
     stdio_init_all();
-    //sleep_ms(1000);
-        
-    
+          
     //For testing, turn both LEDs on, no blinking
-    LED_ON();
+    //LED_ON();
     
     //Turn on the IR-Sources with their characteristic frequencies
-    pwm();
-    sleep_ms(2000);
+    pwm(); 
+    sleep_ms(500);
 
-    //sleep_ms(1000);
     ADC_Init();
-    printf("adc_init() \n");
+    //printf("adc_init() \n"); //ADC_Init done
     
-    
-
     int32_t adcData[N] = {0};   //Array for storing raw ADC Data
     float freqBins[N] = {0};    //Array for storing the amplitudes of the frequency spectrum
     while (1)
     {
-        //ADC_MonitorData();
+        //ADC_MonitorData(); //for monitoring the ADC Values without 
         for(int q = 0; q < 20; q++) {
-        ADC_CollectData(adcData, N); //this function call is ready to be used, when DRDY begins working
-        fft(adcData, freqBins);
-        //sleep_ms(100);
+        ADC_CollectData(adcData, N); //collect ADC Values for FFT
+        fft(adcData, freqBins); //calculate FFT for the ADC values
+        sleep_ms(150); //wait 150ms before making a new measurement
         }
-        printf("results printed \n");
-        //getPosition(freqBins);
-    }
-    
-    
-    //printf("pwm() \n");
-    ADC_CollectData(adcData, N); //this function call is ready to be used, when DRDY begins working
-    fft(adcData, freqBins);
-}
-
-void printTwentyPoints() {
-    int32_t adcData20[N] = {0};   //Array for storing raw ADC Data
-    float freqBins20[N] = {0};    //Array for storing the amplitudes of the frequency spectrum
-    for(uint16_t q = 0; q < 20; q++) {
-        ADC_CollectData(adcData20, N); //this function call is ready to be used, when DRDY begins working
-        fft(adcData20, freqBins20);
-        sleep_ms(200);
+        printf("results printed \n"); //sign, that 20 FFTs have been alculated
+        getPosition(freqBins);
     }
 }

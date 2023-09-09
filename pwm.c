@@ -35,14 +35,12 @@ void pwm()
     uint32_t clock_freq = 125000000;
 
     uint16_t prescaler = 12500;
-    float pwm_freq_A = 526.0; //526 Hz = Bin 142
-    float pwm_freq_B = 345.0; //345 Hz = Bin 445
+    float pwm_freq_A = 526.0; //526 Hz = Bin 212
+    float pwm_freq_B = 345.0; //345 Hz = Bin 139
 
     float clock_div_A = clock_freq / prescaler / pwm_freq_A;
-    //uint32_t pwm_wrap_A = clock_div_A / 2;
 
     float clock_div_B = clock_freq / prescaler / pwm_freq_B;
-    //uint32_t pwm_wrap_B = clock_div_B / 2;
 
     // Find out which PWM slice is connected to GPIO 26 and 28 (it's slice 5 and 6)
     uint slice_num_A = pwm_gpio_to_slice_num(26);
