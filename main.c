@@ -51,9 +51,10 @@ int main() {
         for(int q = 0; q < 20; q++) {
         ADC_CollectData(adcData, N); //collect ADC Values for FFT
         fft(adcData, freqBins); //calculate FFT for the ADC values
-        sleep_ms(150); //wait 150ms before making a new measurement
+        getPosition(freqBins);
+        //sleep_ms(150); //wait 150ms before making a new measurement
         }
         printf("results printed \n"); //sign, that 20 FFTs have been alculated
-        getPosition(freqBins);
+        
     }
 }
